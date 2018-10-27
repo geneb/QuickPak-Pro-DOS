@@ -22,6 +22,10 @@ http://annex.retroarchive.org/crescent/QuickPak-Disk-1.zip
 http://annex.retroarchive.org/crescent/QuickPak-Disk-2.zip
 
 Gene Buckle, October 27th, 2018
+
+I've attached the text from Full Moon Software's catalog description of 
+QuickPak Professional below.
+
 -------------------------------------------------------------------------------
 QUICKPAK(tm) PROFESSIONAL FOR DOS
 =================================
