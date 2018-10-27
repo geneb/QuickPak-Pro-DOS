@@ -1,0 +1,552 @@
+NOTE: The following routines have been added since the QuickPak Professional
+4.00 manual was printed.  If you have the newer "perfect-bound" manual you
+can ignore all of the information in this file through item 19.
+
+
+1.  QInstrH is a "Huge" INSTR routine that will locate a string of text
+    anywhere in the PC's normal 1MB address space.  Declare and call QInstrH
+    as follows:
+
+        DECLARE SUB QInstrH (Segment%, Address%, Search$, NumBytes&)
+        CALL QInstrH(Segment%, Address%, Search$, NumBytes&)
+
+    Here, Segment% and Address% identify where in memory you want to begin
+    searching, Search$ is the string to locate, and NumBytes& specifies how
+    many bytes are to be searched.  If the string is found, Segment% and
+    Address% show where it is in memory.  If it is not found, then Segment%
+    and Address% are both returned set to a value of zero.  Please note that
+    our method of returning zeros can fail if you are searching starting at
+    the very bottom of memory, and a match is found at the very first byte.
+    However, it is very unlikely that you'll need to search the interrupt
+    vector table using QInstrH.  QInstrH is demonstrated in QINSTRH.BAS.
+
+
+2.  SplitName parses out the components in a file name, and returns the drive
+    letter, path name, file name, and extension as separate items.  If there
+    is no drive, the current default is used.  And if no path is specified,
+    the current directory is returned.  This lets you know everything about
+    the file in one operation.  Call SplitName as follows:
+
+        CALL SplitName(WorkName$, Drive$, Path$, FileName$, Extension$)
+
+    Given "C:\MYPATH\YOURPATH\MYFILE.EXT" for WorkName$, SplitName returns
+    Drive$ as "C:", Path$ as "\MYPATH\YOURPATH\", FileName$ as "MYFILE", and
+    Extension$ as ".EXT".  See SPLITNAM.BAS for a demonstration that you can
+    play around with in the QB editing environment.
+
+    For assembly language buffs, notice that the same exact assembler source
+    code is used for both the near and far string versions.  This is achieved
+    by calling BASIC internal routines exclusively.
+
+
+3.  LoadExec is a SHELL replacement that lets you execute another program,
+    and then retrieve its exit code (the DOS error level).  Declare and call
+    LoadExec as follows:
+
+        DECLARE FUNCTION LoadExec% (Program$, CmdLine$)
+        ExitCode = LoadExec%("C:\UTILS\MAKEQLB", "*.*")
+
+    Note that the DOS service that is called does not honor the PATH setting.
+    Therefore, you must state the complete drive and path if they are not the
+    current default.  See the SearchPath$ function below, which examines the
+    PATH and returns the fully qualified name of an executable program.
+
+    Normally, ExitCode will receive a value between 0 and 255, corresponding
+    to the exit code returned by the program that was executed.  However, it
+    is also possible that the value may be higher if DOS intervened in the
+    program's termination.  Here's how you can determine how the program was
+    ended, and isolate the two separate pieces of information:
+
+        IF ExitCode <= 255 THEN
+           PRINT "Normal termination with an exit code of"; ExitCode
+        ELSE
+           DOSCode = ExitCode \ 256     'isolate DOS's contribution
+           ExitCode = ExitCode AND 255  'and retain the program's part too
+           PRINT "DOS intervened"
+           SELECT CASE DOSCode
+              CASE 1
+                 PRINT "You pressed Ctrl-C or Ctrl-Break to end the program"
+              CASE 2
+                 PRINT "A critical error occurred and you pressed A (Abort)"
+              CASE 3
+                 PRINT "The program ended as a TSR -- reboot now!"
+              CASE ELSE
+           END SELECT
+        END IF
+
+    Due to a bug in DOS 2.x you should not use LoadExec with that version
+    of DOS.  You can prevent this by first querying the DOSVer function, and
+    checking for a value of at least 300.  Related to the DOS 2.x issue, some
+    older programs (including CHKDSK and FORMAT) require a DOS 1.x style FCB
+    structure to be present.  To avoid adding a lot of code to accommodate
+    what is clearly a waning method, LoadExec does not support those either.
+
+    LOADEXEC.BAS shows how to use LoadExec with the new SearchPath$ function
+    (see below), and also how to execute batch files.  Besides interpreting
+    return codes, it also shows how to detect DOS errors using WhichError.
+
+
+4.  SearchPath$ returns the complete path name for any executable file on an
+    entire system.  It begins by looking in the current directory for the
+    named file, and if not found then examines all of the directories listed
+    in the DOS PATH.  If no file extension is given, then as it searches each
+    directory it also looks for .COM, .EXE, and .BAT in that order.  This is
+    the same search order that DOS uses.  SearchPath$ is a BASIC function
+    contained in SRCHPATH.BAS.  See LOADEXEC.BAS for a demonstration.
+
+
+5.  ReplaceTbl lets you easily replace all occurrences of one character with
+    any other character using a lookup table.  It is modeled after UpperTbl,
+    except it does not modify any characters that are not found in the table.
+    (UpperTbl also capitalized the string.)  Call ReplaceTbl as follows:
+
+        CALL ReplaceTbl(Work$, Table$)
+
+    Table$ is set up as pairs of characters -- the first character is the
+    one to replace, and the second is the replacement.  The third is the next
+    character to replace, and so forth.  The following example replaces the
+    digits "1" through "5" with the letters "A" through "E".
+
+        Work$ = "Testing 1,2,3,4,5"
+        CALL ReplaceTbl(Work$, "1A2B3C4D5E")
+        PRINT Work$                          'displays "Testing A,B,C,D,E"
+
+
+6.  FileView now supports Tab expansion with a user-specified number of
+    spaces per Tab stop.  See FILEVIEW.BAS for a brief description of how
+    this parameter is defined.
+
+
+7.  GETCMOS.BAS is a demonstration program that shows how to access the data
+    in the CMOS RAM of an AT or compatible computer.  Several useful pieces
+    of information are in there, including the floppy drive types and total
+    system memory (including extended).
+
+
+8.  QPCli and QPSti are a pair of routines that disable and enable interrupts
+    respectively.  There is usually little need for routines like these to be
+    called from BASIC.  However, they were needed to properly access the CMOS
+    RAM (see 7 above).  Because it is possible for a system interrupt to come
+    along and access the port at the same time as the BASIC program, some way
+    is needed to prevent the conflict.  If you do not know how these routines
+    are supposed to be used, please do not experiment with them!
+
+
+9.  NetDrive reports if a given drive is remote (on a network).  Declare and
+    use it like this:
+
+        DECLARE FUNCTION NetDrive%(Drive$)
+        IF NetDrive%(Drive$) THEN
+           PRINT Drive$; " is a remote network drive"
+        ELSE
+           PRINT Drive$; " is a local non-network drive"
+        END IF
+       
+    Drive$ may be upper or lower case, and only the first character is
+    considered.  If Drive$ is null, the current default drive is tested.
+    NetDrive requires DOS 3.10 or later, and returns 0 (not network) with
+    no other error if the DOS version is less than that.
+
+
+10. Removable reports if a given drive's media is removable (a floppy drive).
+    Declare and use it like this:
+
+        DECLARE FUNCTION Removable%(Drive$)
+        IF Removable%(Drive$) THEN
+           PRINT Drive$; " is a removable floppy drive"
+        ELSE
+           PRINT Drive$; " is a hard disk or RAM disk or network drive"
+        END IF
+
+    Drive$ may be upper or lower case, and only the first character is
+    considered.  If Drive$ is null, the current default drive is tested.
+
+    Removable requires DOS 3.00 or later, and returns unpredictable values
+    with no other error if the DOS version is less than that.  Therefore,
+    you should use DOSVer manually if there is a chance the host PC is not
+    using DOS version 3.00 or later.
+   
+    Thanks to Jonathan Zuck for showing how to do NetDrive and Removable.
+
+
+11. ReplaceCharT and ReplaceCharT2 are alternate versions of ReplaceChar and
+    ReplaceChar2 that replace all occurrences of one character with another.
+    Where ReplaceChar and ReplaceChar2 are meant for use with conventional
+    strings, these new versions are meant for use with TYPE variables, fixed-
+    length strings, or indeed, any arbitrary block of memory up to 64K long.
+    We needed it for an in-house project that read someone else's database,
+    and all of the trailing characters in each field were filled with CHR$(0)
+    zero bytes instead of CHR$(32) spaces.
+
+    Declare ReplaceCharT and ReplaceCharT2 as follows:
+
+        DECLARE SUB ReplaceCharT[2](SEG TypeVar AS ANY, BYVAL TypeLength%, _
+          BYVAL Old%, BYVAL New%)
+
+    Where TypeVar is either a single TYPE variable, fixed-length string, or
+    an array element.  TypeLength% is the number of bytes to process, and it
+    can be sent as LEN(TypeVar).  Old% and New% are the ASCII values of the
+    character to replace and the new replacement respectively.  That is, to
+    replace all CHR$(0) bytes with CHR$(32) spaces you will use 0 for Old%
+    and 32 for New%.
+
+    ReplaceCharT searches for an exact match on CHR$(Old%), and replaces each
+    occurrence with CHR$(New%).  ReplaceCharT2 ignores capitalization both
+    when searching and replacing, using upper-case versions.  If you will be
+    replacing zero bytes or other control characters, using ReplaceCharT is
+    slightly faster and smaller than ReplaceCharT2 because it avoids the
+    extra testing for capitalization.
+
+    As with all of the other QuickPak Professional routines that accept a SEG
+    argument, you can also replace the single SEG parameter with an arbitrary
+    segment and address by passing both as integers using BYVAL:
+
+        DECLARE SUB ReplaceCharT(BYVAL Segment%, BYVAL Address%, _
+          BYVAL NumBytes%, BYVAL Old%, BYVAL New%)
+
+    You can also process multiple elements in an array at once by faking the
+    length parameter.  For example, if you have a 100 element array and each
+    element is, say, 200 bytes long, you can use 20000 for the length.  If
+    the length is larger than 32767 you must use a negative value.
+
+    If you plan to use these routines with fixed-length strings, please see
+    the section "Calling with segments" in the manual.
+
+
+12. GRAFCURS.BAS is a new demonstration program that expands on MOUSE.BAS to
+    show how custom graphics mouse cursor shapes can be be defined for EGA
+    and VGA displays.
+
+
+13. QuickPak Professional now includes a complete text window manager that
+    lets you establish a windowed viewport on the screen, and print text in
+    that window with scrolling handled as necessary automatically.
+
+    Six routines are provided to set the window boundaries, print text, clear
+    the window, and locate the cursor within the window.  The calling syntax
+    for these routines is as follows:
+
+      CALL QPWindowInit(BYVAL ULRow%, BYVAL ULCol%, BYVAL LRRow%, BYVAL LRCol%)
+      CALL QPWindowPrint(Text$, BYVAL Colr%)
+      CALL QPWindowPrintCR(Text$, BYVAL Colr%)
+      CALL QPWindowCLS(BYVAL Colr%)
+      CALL QPWindowLocate(BYVAL Row%, BYVAL Column%)
+      CALL QPWindowPrintWrap(Text$, ULCol%, LRCol%, Colr%)  'BASIC subprogram
+
+    Two additional functions are provided to determine where within the
+    window the cursor is currently located:
+
+      Row = QPWindowRow%
+      Column = QPWindowCol%
+
+    QPWindowInit is called to set new window boundaries.  It is not necessary
+    to call QPWindowInit before using QPWindowPrint, though you usually
+    would.  The initial default values are 1, 1, 25, 80.  QPWindowInit also
+    checks the current cursor position, and moves it into the window if
+    necessary.
+
+    QPWindowPrint prints the text specified, containing it within the window
+    and scrolling as necessary.  QPWindowPrintCR is similar except it issues
+    a carriage return and line feed after the text is printed.  That is,
+    calling QPWindowPrint is equivalent to using a semicolon in BASIC:
+
+        PRINT Work$;
+
+    And calling QPWindowPrintCR is like using a plain BASIC PRINT:
+
+        PRINT Work$
+
+    QPWindowCLS clears the window and places the cursor in the upper-left
+    corner, using the color you specify for clearing.
+
+    QPWindowLocate sets the cursor position within the virtual window.  Note
+    that the QPWindowLocate values are virtual, and are relative to the
+    window's upper left corner.  Therefore, CALL QPWindowLocate(1, 1) places
+    the physical cursor at the upper-left edge of the window, and not at the
+    upper-left edge of the video screen.
+
+    QPWindowPrintWrap prints text with word wrapping, so words can be printed
+    without being split in the middle.  QPWindowPrintWrap is written in BASIC
+    in the same WINDOW.BAS file as the demonstrations for these routines.
+    Therefore, you must copy the subprogram to your own program file (or to a
+    separate module) before it can be used.
+
+    The QPWindowRow and QPWindowCol functions return the current position of
+    the cursor relative to the window borders -- not the physical screen.
+
+    You can freely mix calls to the window routines with regular PRINT and
+    LOCATE statements.  QPWindowPrint keeps track of where it last printed,
+    and when the window needs to be scrolled.  However, after calling
+    QPWindowPrint the physical cursor is placed immediately after the text
+    that was just printed.  Likewise, QPWindowCLS positions the cursor at the
+    upper-left corner of the window after it clears the windowed portion of
+    the screen.
+
+    All of these routines work in screen modes other than 80 columns, and
+    adjust their behavior automatically.
+
+    There is only minimal error trapping such as preventing against locating
+    the cursor outside of the current window boundaries.  But there's no
+    added code to ensure, for example, that the upper-left window boundary is
+    higher than and to the left of the lower-right boundary.  QPWindowInit
+    also makes no effort to ensure that you use legal values.  This is done
+    on purpose -- if you have a display adapter that can show, say, 132
+    columns, then these routines will accommodate that.  However, rows and
+    columns are limited to a maximum of 255.
+
+    You can also use SetMonSeg to print to an integer array or other block of
+    memory, to create virtual screens of any size that are built in the
+    background and then copied to display memory using BCopy or ScrnRest or
+    MPRestore.
+
+    These windowing routines are demonstrated in the WINDOW.BAS example
+    program.
+
+
+14. MidChar and MidCharS are new routines that let you access characters in a
+    string much faster than with BASIC's MID$.  These were originally written
+    for our P.D.Q. product, but they are so useful we have added them to the
+    QuickPak library as well.
+
+    MidChar is a function that returns the ASCII value of a specified
+    character in a string.  The first example below shows how MidChar is
+    used, and the second shows an equivalent BASIC statement.
+
+        Char = MidChar%(Work$, Position%)
+        Char = ASC(MID$(Work$, Position%, 1))
+
+    Every time you use the MID$ function a copy of the specified portion of
+    the string is created, which takes time.  Further, string operations are
+    always slower than integer operations.  Therefore, MidChar is most useful
+    when examining characters in the string, perhaps to parse a file name for
+    the path or drive letter as shown below.  MidChar is approximately five
+    times faster than BASIC's MID$ when using QuickBASIC or near strings in
+    BASIC PDS.
+
+        DEFINT A-Z
+        FileName$ = "C:\SUBDIR1\SUBDIR2\FILENAME.EXT"
+        FOR X = LEN(FileName$) TO 1 STEP -1     'walk backwards
+          IF MidChar%(FileName$, X) = 92 THEN   '92 = ASC("\")
+            Path$ = LEFT$(FileName$, X)         'isolate the path
+            FileName$ = MID$(FileName$, X + 1)  'and then the name
+            EXIT FOR                            'no need to continue
+          END IF
+        NEXT
+
+    Note that MidChar returns a value of -1 if Position% is negative or past
+    the end of Work$.
+
+    MidCharS complements MidChar and quickly replaces a single character in a
+    string.  Call MidCharS as follows:
+
+        CALL MidCharS(Work$, BYVAL Position%, BYVAL Char%)
+
+    Where CHR$(Char) is inserted into Work$ at the position indicated.  If
+    Position% is beyond the end of Work$, the request is ignored.  Using
+    MidCharS adds only 17 bytes of code to a program, compared to 25 for the
+    following BASIC equivalent:
+
+        MID$(Work$, Position, 1) = Char$
+
+    If you specify a negative position or a position past the end of the
+    string MidCharS ignores the request.
+
+    Like MidChar, MidCharS is five times faster than BASIC with near strings.
+
+
+15. ShareThere is a new function that reports if SHARE is installed in the
+    host PC.  This is useful if you are writing a network program, because
+    BASIC will report an error if SHARE (or its equivalent in the network
+    software) is not available when a file is opened for shared access.
+
+    Declare and use ShareThere as follows:
+
+        DECLARE FUNCTION ShareThere% ()
+        IF ShareThere% THEN
+          OPEN "ACCOUNTS.DAT" FOR RANDOM SHARED AS #1 LEN = RecLength%
+        ELSE
+          PRINT "Please quit and run the SHARE program"
+          END
+        END IF
+
+    As with many of the other QuickPak Professional functions, ShareThere
+    uses -1 to indicate True and 0 for False, so you can use BASIC's NOT:
+
+        IF NOT ShareThere% THEN ...
+
+
+16. FormatDiskette and GetDisketteType are two new functions that format a
+    floppy disk and return the type of installed drive respectively.  In
+    most cases you will use GetDisketteType before calling FormatDiskette,
+    to ensure that you specify appropriate parameters.  The syntax for using
+    GetDisketteType is as follows:
+
+        Result% = GetDisketteType%(DriveNumber%)
+        
+    Here, DriveNumber% refers to the physical drive number as recognized by
+    the BIOS.  Therefore, drive A is specified with a value of zero, drive B
+    with a value of 1, and so forth.
+
+    The result returned indicates the type of drive as shown below:
+    
+        0 = Drive not present or cannot identify
+        1 = 360KB 5.25" 40 track
+        2 = 1.2MB 5.25" 80 track
+        3 = 720KB 3.5"  80 track
+        4 = 1.4MB 3.5"  80 track
+
+    Once the drive type is known you can then proceed to format the diskette.
+    Note that DisketteFormat can be used to format a disk at a lower capacity
+    than the drive is capable of.  For example, you can specify a capacity of
+    360KB even if the disk drive can handle 1.2MB disks.  Likewise, you can
+    specify that a 1.44MB disk be formatted to only 720KB.
+
+    The syntax for FormatDiskette is as follows:
+
+        Result% = FormatDiskette%(DriveNumber%, Capacity%, SEG BufArray%)
+
+    Like GetDisketteType, DriveNumber% refers to a physical drive number with
+    drive A represented as zero, drive B as 1, and so forth.
+
+    The Capacity% argument is given as whole integer values:
+
+        360 =  360KB 5.25"
+       1200 =  1.2MB 5.25"
+        720 =  720KB 3.5"
+       1440 = 1.44MB 3.5"
+
+    BufArray is a block of memory that FormatDiskette will use as a work area
+    to hold the disk's FAT (File Allocation Table) as it is being built.  We
+    recommend that you use an integer array, because it can be dimensioned to
+    create the buffer and then erased after FormatDiskette is finished.  The
+    table below shows how big the buffer must be for each of the possible
+    diskette capacities.  Of course, the buffer can be larger than necessary
+    and you can use the largest size only, to avoid having to add extra logic
+    to your program.
+
+        Disk Size          Bytes needed           Number of integer elements
+        =========   ===========================   ==========================
+          360KB     ( 9 * 4) + (2 * 512) = 1060    REDIM BufArray%(1 TO 530)
+          1.2MB     (15 * 4) + (7 * 512) = 3644    REDIM BufArray%(1 TO 1822)
+          720KB     ( 9 * 4) + (3 * 512) = 1572    REDIM BufArray%(1 TO 786)
+         1.44MB     (18 * 4) + (9 * 512) = 4680    REDIM BufArray%(1 TO 2340)
+
+    Finally, a result code of zero indicates that the diskette was formatted
+    successfully; any other value means there was an error.  The only error
+    that is not fatal is 11, which means that bad sectors were found but were
+    also marked as being bad.  This is the same as the way the DOS FORMAT
+    program works, in that as long as track zero is not defective, the disk
+    will still be usable.
+
+                   FormatDiskette error code return values
+        =============================================================
+
+        0 = No error
+        1 = Invalid disk parameters
+        2 = Address mark not found
+        3 = Write protect error
+        4 = Requested sector not found
+        5 = Can't locate drive
+        6 = Disk change line is active
+        7 = Invalid capacity specified
+        8 = DMA Overrun
+        9 = DMA boundary error
+       10 = Track zero bad
+       11 = Bad sectors found and marked (not fatal)
+       12 = Media type not found
+       16 = CRC read error
+       32 = Disk controller failure
+       64 = Seek failure
+      128 = Drive not ready
+
+Both of these routines are demonstrated in the FORMAT.BAS example program.
+
+
+17. In response to customer demand, the GetCPU function now returns a value
+    of 486 when the host PC has an 80486 processor installed.
+
+
+18. Handle2Name is a new routine that returns the name of a file given a DOS
+    handle.  Declare and call it as shown in the following short example
+    (from HAND2NAM.BAS):
+
+        DECLARE SUB Handle2Name (BYVAL Handle%, FileName AS ANY)
+        TYPE NameType
+          FileName  AS STRING * 8
+          Extension AS STRING * 3
+        END TYPE
+        DIM FilName AS NameType
+
+        PRINT "Handle FileName Ext"
+        PRINT "==================="
+        FOR Handle% = 0 TO 19
+          CALL Handle2Name(Handle%, FilName)
+          PRINT TAB(3); Handle%;
+          PRINT TAB(8); FilName.FileName; " "; FilName.Extension
+        NEXT
+
+
+19. We have added a full set of routines for accessing XMS memory.  All of
+    the routines are modeled after the various EMS services, and use the
+    same names (substituting "Xms" for "Ems") and a similar calling syntax.
+
+    Please see the file README.XMS for a complete description of all these
+    routines.  Also see DEMOXMS.BAS for a working example.
+
+
+20. QuickPak Professional is now compatible with Visual Basic for DOS.  See
+    README.VBD for details.
+
+
+21. GetDisketteType now returns a value of 5 to indicate a 2.88MB disk drive.
+
+
+22. GASGAUGE.BAS and its demo, DEMOGAS.BAS are newly added.  The GasGauge
+    subprogram makes it easy for you to display on-screen the progress of
+    something your program is doing, such as downloading a file or sorting
+    a database or whatever.
+
+    You call GasGauge giving it the minimum and maximum limits, the current
+    value, the width, and color.  It displays a status indicator showing the
+    percentage complete.  In the simplest case you would use 1 and 100 for
+    the lower and upper limits, and vary the value between those values.  But
+    any integer values are acceptable -- including negative) -- and GasGauge
+    will compute the proper percentage as necessary.  (The upper limit must
+    of course be larger than the lower limit.)
+
+    As written, GasGauge displays the lower and upper limits beneath the bar
+    at each end.  The remarks in GASGAUGE.BAS explain how to remove that code
+    if you prefer to keep the display as small as possible.  You may also
+    modify the "percent completed" message to whatever makes sense for you,
+    add code to center it, or even change it to be a parameter if you prefer.
+
+
+23. TEXTSORT.BAS is a new BASIC subprogram that sorts plain ASCII text files,
+    and DEMOTSRT.BAS is a demonstration that can also be compiled and used as
+    a stand-alone utility.  The files' comments provide all the information.
+
+
+24. The various MouseRange routines were changed to clear the incoming Button
+    variable each time automatically (as it should have in the first place).
+    If you have existing code that clears Button each time these routines are
+    called, you can now eliminate that extra step.
+
+
+25. It is no longer necessary to pre-fill the string array elements when
+    using the ReadFili routine, but ONLY if you are using the far strings
+    version (in PRO7.LIB and PRO7.QLB) with BASIC PDS or VB/DOS.
+
+
+26. When you are using the various QPWindow routines after calling SetMonSeg
+    to direct printing to a different segment, the QPWindowCLS routine clears
+    the physical screen instead of the screen memory defined by SetMonSeg.
+    This is a bug, but it's very easy to work around.  Simply use ClearScr or
+    ClearScr0 instead of QPWindowCLS.  Although you'll have to tell ClearScr
+    where the window boundaries are located (QPWindowCLS already knows where
+    the boundaries are), ClearScr will honor the new segment.
+
+27. Fill1 is a new routine that's modeled after the Fill2, 4, and 8 routines.
+    You can use it to fill TYPE variables or any other data.  To clear a TYPE
+    variable to all zeros do this:
+
+      CALL Fill1(SEG TypeVar, BYVAL 0, BYVAL LEN(TypeVar))

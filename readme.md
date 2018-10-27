@@ -1,11 +1,27 @@
-This document contains information about the public domain release of the 
-former commercial product known as QuickPak Professional for DOS.
-The first release of this public domain version was on October 26th, 2018.
+On October 26th, 2018 I purchased the software assets of Full Moon Software.
+Full Moon Software used to be known as Crescent Software.  They produced a line
+of excellent development libraries for MS-DOS.  The supported environments were
+QuickBASIC 4.x, Microsoft Professional Development System v7.x, and Visual 
+Basic for DOS.
 
-Below you'll find the original catalog entry for the product - it describes 
-QuickPack Pro better than I ever could. :)
+The idea behind obtaining these products was to release them to the public
+domain to ensure that people could still access these things in the future.
+While most developers will have no use for these products in a modern 
+develoment environment, they still have value as an example of "how it was 
+done" back in the heyday of x86 DOS development. 
 
--Gene Buckle 26Oct18
+The software in this repository hasn't been modified from how I received it 
+from Ethan Winer, the original author.  While all the source files carry some 
+kind of Copyright notice, the software is now in the public domain.
+
+The contents of the installation floppies will be uploaded to the Internet
+Archive soon and when the manuals are scanned, they'll be uploaded there
+as well.
+The original distribution disk files are available here:
+http://annex.retroarchive.org/crescent/QuickPak-Disk-1.zip
+http://annex.retroarchive.org/crescent/QuickPak-Disk-2.zip
+
+Gene Buckle, October 27th, 2018
 -------------------------------------------------------------------------------
 QUICKPAK(tm) PROFESSIONAL FOR DOS
 =================================
