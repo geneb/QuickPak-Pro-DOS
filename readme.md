@@ -18,7 +18,9 @@ The contents of the installation floppies will be uploaded to the Internet
 Archive soon and when the manuals are scanned, they'll be uploaded there
 as well.
 The original distribution disk files are available here:
+
 http://annex.retroarchive.org/crescent/QuickPak-Disk-1.zip
+
 http://annex.retroarchive.org/crescent/QuickPak-Disk-2.zip
 
 Gene Buckle, October 27th, 2018
