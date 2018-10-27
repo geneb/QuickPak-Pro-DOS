@@ -1,0 +1,57 @@
+;======================================================================
+; COMPARE_CY - Compare Currency Integers (64-bit)
+; Rewritten (so that it works) by Robert L. Hummel 5/5/92)
+; Rewritten so it is much smaller and faster by Ethan on 5-10-92
+; Correction for non-significant sign bit in word 2 & 1 Paul Passarelli 10/13/93
+;
+;  On entry:
+;       DS:SI   = pointer to first number
+;       ES:DI   = pointer to second number
+;
+;  On exit:
+;       FLAGS   = set for comparative jump
+;
+;  Assumptions:
+;       Neither element crosses a segment boundry
+;----------------------------------------------------------------------
+Compare_Cy Proc Near
+
+    Mov  AX,[SI+06]     ;get the high word(3) of the first value                
+    Cmp  AX,ES:[DI+06]  ;compare that to the high word of the second value      
+    Jne  Exit           ;they're different, and the flags are now correct   
+
+    Mov  AX,[SI+04]     ;get the next lower word(2) of the first value
+    Cmp  AX,ES:[DI+04]  ;compare that to the next lower word of second value
+    ;Jne  Exit           ;as above                      
+    
+    JNE  Done   ;"Jne Exit" is not correct. Since the sign bit in this word 
+            ; is NOT a sign bit at all.     
+    
+        
+
+    Mov  AX,[SI+02] ;get word(1)
+    Cmp  AX,ES:[DI+02]
+    ;Jne  Exit
+
+    JNE  Done   ;"Jne Exit" is not correct. Since the sign bit in this word 
+            ; is NOT a sign bit at all.     
+
+
+    Mov  AX,[SI]    ;finally word(0)
+    Cmp  AX,ES:[DI]
+    Je   Exit           ;they're equal, skip ahead and return with the flags
+                        ;  set as they are
+
+Done:
+    Mov  AX,1           ;set AH = 0, AL = 1
+    Ja   @F             ;Value1 is greater, generate a GT condition
+    Xchg AH,AL          ;Value2 is greater, generate a LT condition
+
+@@:
+    Cmp  AL,AH          ;set the flags accordingly
+
+Exit:
+    Ret
+
+Compare_Cy Endp
+End

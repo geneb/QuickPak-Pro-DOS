@@ -1,0 +1,30 @@
+This version of QuickPak Professional now supports Microsoft Visual Basic for
+DOS (VB-DOS) as well as QuickBASIC 4.0 through BASIC PDS 7.1.  The PRO7.LIB
+originally written for Microsoft BASIC PDS (versions 7.0 and 7.1) is fully
+compatable with VB-DOS.  However, the Quick Library format has been changed.
+We therefore provide a Quick library specifically for use with VB-DOS called
+PROVBD.QLB.  We created this Quick Library by linking the PRO7.LIB with the
+version of LINK supplied with VBDOS:
+
+    LINK /Q/SEG:512 PRO7.LIB, PROVBD, NUL, VBDOSQLB.LIB;
+
+Note that if you are using VB-DOS you will still link with the PRO7.LIB.  If
+you compile and link from within the VB-DOS environment you will need a .LIB
+library with the same name as your Quick library.  In this case, you can
+simply rename the PRO7.LIB library to PROVBD.LIB with the DOS REN command:
+
+    REN PRO7.LIB PROVB.LIB
+
+Several of the BASIC routines supplied with earlier versions of QuickPak
+Professional required minor source code modifications, because they used
+variable names that are now reserved words in VB-DOS.  Likewise, the MsgBox
+subroutine was renamed CSMsgBox to avoid a conflict with the VB-DOS MsgBox
+command.  The routines modified to accommodate VB-DOS are as follows:
+
+    CALENDAR.BAS
+    CSMSGBOX.BAS
+    MASKIN.BAS
+    DEMO123.BAS
+    DEMOPOP.BAS
+    PRTSC.BAS
+    QD.BAS

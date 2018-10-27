@@ -1,0 +1,43 @@
+                 QuickPak Professional README for BASIC PDS
+
+This file describes enhancements and changes that relate to the BASIC 7 PDS
+version of QuickPak Professional only.
+
+
+QPSADD AND QPLEN
+
+    QPSadd & QPLen have been included only for compatibility purposes.
+    Unlike earlier compilers, the BASIC 7.x SADD and LEN functions are
+    essentially faster, due to the overhead QuickPak Professional adds for
+    far strings.
+
+
+NEW RESERVED WORDS
+
+    The following list are new reserved words that formerly were used in
+    QuickPak Professional BASIC routines.  Therefore, QuickPak Professional
+    routines (and variables in the various demonstration programs) that
+    formerly had these as names have been changed in this version:
+
+        SSEG      DIR$      INSERT      DELETE      STACK      CURDIR$
+
+
+CURRENCY DATA TYPES
+
+
+    All of the array sorting, searching, inserting and deleting routines now
+    support the BASIC 7 Currency data type.  A new "type code" has been added
+    to indicate this type of variable, which is -5.  That is, when calling
+    SortT to sort a Currency array, you would do this:
+
+        CALL SortT(SEG Array(Start), NumEls%, Dir%, ElSize%, Offset%, -5)
+
+    The added support for currency data has also spawned a few new routines.
+    MinC and MaxC will find the minimum and maximum values in a Currency
+    array, and IMinC and IMaxC do the same based on an index.  These are
+    used exactly the same as the other Min/Max and IMin/IMax routines, so the
+    syntax need not be repeated here.  See pages 2-14, 2-15, 2-27, and 2-28
+    for more information.
+
+    Likewise, there are now SortC and ISortC routines, and again, the syntax
+    is identical to the other Sort and ISort routines.

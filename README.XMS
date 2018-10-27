@@ -1,0 +1,424 @@
+XMS Manager
+                            assembler subroutines and functions in PRO.LIB
+                            
+
+The QuickPak Professional XMS Memory Manager is a complete set of subroutines
+that allow you to store and retrieve any type of data using extended memory.
+Extended memory is the memory starting above 1,024K on a 286 or better
+machine.  These routines access this memory using Microsoft's extended memory
+specification version 2.0.
+
+
+VERY IMPORTANT:
+
+    These routines require an 80286 or later computer only.  The GetCPU
+    function will allow you to determine what processor is currently
+    installed in the host PC.
+
+
+These routines are designed to emulate the QuickPak Professional EMS
+routines.  However, some routines are not directly applicable to XMS, and
+others have parameters passed by value instead of reference for increased
+speed and reduced code size.  Therefore, it is important that you declare
+these routines before using them.  Each XMS routine is explained in detail on
+the pages that follow, along with a brief example showing the correct usage.
+All of these routines are written in assembly language and are contained in
+PRO.LIB and PRO7.LIB.
+
+
+ACCESSING XMS
+
+To access XMS, you first need to load an XMS memory manager such as HIMEM.SYS
+which Microsoft provides with DOS 5.0 and Windows 3.0. Other memory managers
+such as QEMM386 and 386MAX also provide XMS memory.
+
+The XMS specification provides three types of memory to your system.  The
+first is regular extended memory; you allocate this memory in kilobytes and
+it can be used to store data only.  The second type of XMS is the high memory
+area (HMA).  This is the first 64K segment above the 1,024K boundary.
+
+Because of a quirk in Intel processors, DOS programs can access this segment
+in real mode, and also execute code there.  If you loaded DOS 5.0 high or are
+using QBX then you are taking advantage of the HMA.  Only one program can
+control the HMA, and you cannot take advantage of it in your own BASIC
+programs.
+
+The last type of memory is called upper memory blocks (UMB).  This is the
+memory between 640K and 1024K that is available on 80386/486 and some 80286
+machines.  The advantage of using UMB memory over conventional XMS memory is
+that you can access it directly with the BCopy routine, instead of having to
+move it into lower memory first by calling an XMS routine.
+
+
+USING THE XMS ROUTINES
+
+Before any XMS routines may be used in a program, the XMSLoaded function must
+be invoked to determine if XMS memory is available.  Unlike the EMS routines
+which are invoked internally using an interrupt call, the XMS routines are
+invoked by calling a specific address.  This address is determined by
+XMSLoaded, which is why it must be called first.
+
+For most applications you will use four of these routines as follows.  The
+XMSLoaded function is first used to determine if XMS memory is installed and
+available.  The Array2XMS and XMS2Array subroutines may then be used to copy
+data to and from XMS memory.  Finally, XMSRelMem will be used to release
+memory when it is no longer needed.
+
+One important difference between these XMS routines and the EMS routines is
+in the use of an internal BASIC routine called B_OnExit.  B_OnExit is a hook
+into BASIC's runtime that lets you specify a routine that BASIC will call
+before your program terminates.  What this means is that all XMS memory you
+allocate will be automatically released when your program terminates.  This
+is very useful when working in the QB environment, and you are likely to stop
+and restart your program many times without calling the routines that free
+the XMS memory.
+
+However, there may be times when you want some XMS memory to remain after
+your program has terminated.  For instance, you can pass a large amount of
+data between executable programs by storing it in XMS, and then passing to
+the second program the handle of the XMS block.  We have provided the routine
+KeepXMSHandle for just this purpose.
+
+A quirk in the XMS specification requires that all memory moves be an even
+number of bytes.  Although we allow you to use a data structure with an odd
+length in the XMSGet1El and XMSSet1El routines, we require that you have an
+even amount of bytes when using Array2XMS and XMS2Array.  This is done to
+keep code size small and to increase the speed of the routines.
+
+When using XMSGet1El and XMSSet1El, it is better if you work with a data
+structure with an even length.  Although this is not strictly required, when
+these routines are used with an odd-length data structure they have to make
+two XMS memory accesses to retrieve the information.  If you are using an
+odd-length data structure with the Array2XMS and XMS2Array routines, then you
+have to use an even number of elements.  Although the discussion that follows
+describes storing and retrieving arrays, Array2XMS and XMS2Array may in fact
+be used with any contiguous block of memory.
+
+When Array2XMS is called, the correct amount of memory will be allocated for
+you automatically, based on the number of elements you are storing and the
+size of each element.  Besides allocating memory, Array2XMS also returns a
+"handle" number that will be used to retrieve the array later.  This handle
+remains active until the XMSRelMem routine is called, or your program
+terminates and the memory is released back to the system.
+
+Each time Array2XMS is called a new handle is obtained.  Thus, if you intend
+to save data repeatedly to the same XMS memory you should call XMSRelMem
+before each subsequent save.  However, when XMS2Array is used to retrieve an
+array the memory is not automatically released.  Therefore, you may retrieve
+the array as many times as you'd like, and call XMSRelMem only once when the
+memory is no longer needed.  This is the same method the EMS routines use,
+and we have found it to be the most flexible.
+
+A list of the possible XMS error codes is shown in the table on the following
+page.  Similar to the way errors are reported for the various QuickPak
+Professional DOS routines, XMS errors are detected by querying the XMSError
+function.  This function returns the status of the most recent XMS service,
+and is either zero meaning no error occurred, or it contains an error code.
+The official XMS errors have values of 128 or higher, and we have added a few
+of our own starting at 1.
+
+
+XMS ERROR CODES
+===============
+
+    Hex   Dec   Meaning
+    00H   0     No error
+    01H   1     XMSLoaded hasn't been used yet to initialize these routines
+    02H   2     The element length was given as zero
+    03H   3     The number of elements was given as zero
+    80H   128   Function not implemented
+    81H   129   VDISK device is detected
+    A0H   160   All available extended memory is allocated
+    A1H   161   All available extended memory handles are in use
+    A2H   162   Handle is invalid
+    A3H   163   Source handle is invalid
+    A4H   164   Source offset is invalid
+    A5H   165   Destination handle is invalid
+    A6H   166   Destination offset is invalid
+    A7H   167   Length is invalid
+    A8H   168   Move has invalid overlap
+    A9H   169   A parity error occurred
+    B0H   176   A smaller UMB is available
+    B1H   177   No UMBs are available
+    B2H   178   UMB segment number is invalid
+
+Some of these routines have been designed as functions while others pass
+parameters by value, so it is important that they be declared before you use
+them.  A complete demonstration including appropriate declarations is given
+in the DEMOXMS.BAS example program.
+
+
+XMS FUNCTIONS
+=============
+
+XMSError - Function
+
+Reports the status of the most recent XMS operation.
+
+    DECLARE FUNCTION XMSError% ()
+    IF XMSError% THEN PRINT "Error number"; XMSError%; "occurred."
+
+
+XMSLoaded - Function
+
+Returns -1 if the XMS driver software is loaded, or 0 if it is not.
+
+    DECLARE FUNCTION XMSLoaded% ()
+    IF XMSLoaded% THEN
+      PRINT "XMS memory is loaded on this PC."
+    ELSE
+      PRINT "Sorry, this PC does not have XMS."
+    END IF
+
+
+
+XMS SUBROUTINES
+===============
+
+XMSAllocMem - Subroutine
+
+Allocate a specific number of kilobytes of XMS memory.
+
+    DECLARE SUB XMSAllocMem (BYVAL NumK%, Handle%)
+    CALL XMSAllocMem (NumK%, Handle%)
+
+Where NumK% is the number of kilobytes of XMS memory requested, and Handle%
+is returned to identify the memory for later use.
+
+
+XMSRelMem - Subroutine
+
+Releases all memory associated with a specified handle.
+
+    DECLARE SUB XMSRelMem (BYVAL Handle%)
+    CALL XMSRelMem (Handle%)
+
+
+Array2XMS - Subroutine
+
+Copies all or part of an array or other block of memory into XMS memory.
+
+    CALL Array2XMS (SEG Array(Start), ElSize%, NumEls%, Handle%) or
+
+    CALL Array2XMS (BYVAL Segment%, BYVAL Address%, NumBytes%, 1, Handle%)
+
+Where Array(Start) is any numeric or TYPE array, ElSize% is the size of each
+element in bytes, NumEls% is the total number of elements to copy into XMS
+memory, and Handle% is the handle returned by Array2XMS.  The second example
+shows how to store any contiguous block of memory.
+
+Because of a requirement in the XMS specification, the total number of bytes
+must be even. This limitation requires you to have an even length data size
+or an even number of array elements.
+
+The ElSize% parameter would be 2 for an integer array, 4 for a long integer
+or single precision array, and 8 for a currency or double precision array.
+Array2XMS also accepts the negative code values used by QuickPak Professional
+TYPE sort routines.  To store fixed-length string and TYPE arrays in extended
+memory, ElSize% will be the length of each element.  However, to store a
+fixed-length string array you must first define it as a TYPE.  This is
+described in the section "Calling with Segments".
+
+To store a conventional (not fixed-length) string array in XMS memory you
+must first store it in an integer array using the QuickPak Professional
+StringSave routine.  Then the integer array may be copied into XMS memory.
+To retrieve the string array you would use XMS2Array to copy it back to an
+integer array, and then use StringRest to place it back into the string
+array.  StringSave and StringRest are described in the section entitled
+"String Manager Routines".
+
+Array2XMS may be used to store a single item, or any contiguous block of
+memory by specifying the number of bytes in ElSize%, and using 1 for NumEls%.
+Be sure to make ElSize% an even number or else you will get an error 167
+"Invalid Length".  The actual number of bytes copied into extended memory is
+calculated within Array2XMS by multiplying ElSize% times NumEls%.  If the
+number of bytes is 16K (16,384) bytes or less, simply set ElSize% to the
+number of bytes and use 1 for NumEls%.  To store, say, 64K (65536 bytes) you
+would specify ElSize% as 16384 and set NumEls% to 4.  Any similar combination
+will also work.  The example below shows how to save a single text screen
+from a color display.
+
+    CALL Array2XMS(BYVAL &HB800, BYVAL 0, 4000, 1, Handle)
+
+Then to display the screen later you would use:
+
+    CALL XMS2Array(BYVAL &HB800, BYVAL 0, 4000, 1, Handle)
+
+If there is not enough XMS memory available XMSError will return 160.  If
+there are no XMS handles available XMSError returns 161.  If you specify an
+odd number of bytes to transfer, then XMSError will return error 167.
+
+
+XMS2Array - Subroutine
+
+Retrieves an array or other block of memory from XMS memory.
+
+    CALL XMS2Array (SEG Array(Start), ElSize%, NumEls%, Handle%)
+
+or
+    CALL XMS2Array (BYVAL Segment%, BYVAL Address%, NumBytes%, 1, Handle%)
+
+Where Array(Start) is any numeric or TYPE array, ElSize% is the size of each
+element in bytes, NumEls% is the total number of elements to copy from XMS
+memory, and Handle% is the handle that was assigned by Array2XMS when the
+array was stored.  It is essential that the array being restored has been
+sufficiently dimensioned to hold the information being copied to it.
+
+This routine is the exact opposite of Array2XMS, and the parameters have the
+same meaning as in that routine.  XMS2Array does not release the XMS memory
+assigned to Handle%.  If you want to release it you must call XMSRelMem.
+
+
+XMSGet1El - Subroutine
+
+XMSGet1El allows retrieving a single element from extended memory.
+
+    CALL XMSGet1El(SEG Value, ElSize%, ElNum%, Handle%)
+
+Where Value is any variable, and ElSize% is either its length in bytes or a
+special code that indicates the length (see below).  ElNum% is the element
+number (based at one, not zero), and Handle% is the XMS handle that was
+assigned when the array was first saved.
+
+Although Array2XMS and XMS2Array routines require an even number of bytes,
+this isn't the case with XMSGet1El.  However, it takes two XMS memory
+accesses to get an odd length element, and it takes three extended memory
+accesses to set an odd length element.  Therefore, your program will run more
+quickly if you can keep your elements at an even length.
+
+XMSGet1El lets you retrieve a single element from an array that has been
+saved in extended memory, when you don't want to have to retrieve the entire
+array.  Another important use would be to access a single screen from among
+several that are being stored in XMS memory.  Because the same routine may be
+used to process different types of variable, you should declare it using the
+AS ANY option:
+
+    DECLARE SUB XMSGet1El(SEG Value AS ANY, ElSize%, ElNum%, Handle%)
+
+The ElSize% variable may optionally be the special size code that is used by
+the various QuickPak Professional TYPE array sorts.
+
+Also see the companion routine XMSSet1El which assigns a single element to an
+array or block of data in XMS memory.
+
+
+XMSSet1El - Subroutine
+
+XMSSet1El allows assigning a single element in an array that is stored in
+extended memory.
+
+    CALL XMSSet1El(SEG Value, ElSize%, ElNum%, Handle%)
+
+Where Value is any variable, and ElSize% is either its length in bytes, or a
+special code that indicates the length (see below).  ElNum% is the element
+number (based at one, not zero), and Handle% is the XMS handle that was
+assigned when the array was first saved.
+
+Although Array2XMS and XMS2Array routines require an even number of bytes,
+this isn't the case with XMSSet1El.  However, it takes two XMS memory
+accesses to get an odd length element, and it takes three extended memory
+accesses to set an odd length element.  Therefore, your program will run more
+quickly if you can keep your elements at an even length.
+
+XMSSet1El lets you assign a single element from an array that has been saved
+in extended memory, when you don't want to have to retrieve the entire array,
+make the assignment, and then save it back again.  Another important use is
+to store multiple screen images in XMS memory.
+
+Because the same routine may be used to process different types of variable,
+you should declare it using the AS ANY option:
+
+    DECLARE SUB XMSSet1El(SEG Value AS ANY, ElSize%, ElNum%, Handle%)
+
+The ElSize% variable may optionally be the special size code that is used by
+the various QuickPak Professional TYPE array sorts.
+
+Also see the companion routine XMSGet1El which allows you to assign a single
+element.
+
+
+XMSInfo - Subroutine
+
+XMSInfo retrieves several useful items of information about the XMS memory in
+your system, and stores it in a TYPE variable.  The TYPE structure used is as
+follows:
+
+    TYPE XMSInfoType
+      XMSVersion    AS INTEGER
+      DriverVersion AS INTEGER
+      NumHandles    AS INTEGER
+      FreeMem        AS INTEGER
+      Largest        AS INTEGER
+      HMAAvail       AS INTEGER
+      LargestUMB    AS LONG
+    END TYPE
+
+Here, XMSVersion is the version of the XMS specification your driver conforms
+to, and DriverVersion is the version of your particular driver.  Both of
+these values are stored with the major version times 100.  For example,
+version 6.25 will be reported as the value 625.
+
+NumHandles is the number of free handles available.  FreeMem is the total
+amount of XMS memory available in kilobytes, and Largest is the largest
+single block of XMS memory you can allocate at a single time in kilobytes.
+
+HMAAvail is a boolean (true/false) value that tells you if the HMA (High
+Memory Area) is available.  It will be -1 if it is free, or 0 if another
+program has control of it.
+
+LargestUMB is the largest Upper Memory Block you can allocate, in bytes.
+This does not represent the total amount of free UMBs, however, because upper
+memory is usually fragmented.
+
+DEMOXMS.BAS contains examples on calling this routine and displaying the
+information returned.
+
+
+XMSSetError - Subroutine
+
+Allows a BASIC program to set or clear the XMSError value.
+
+    DECLARE SUB XMSSetError (BYVAL Value%)
+    CALL XMSSetError (Value%)
+
+
+KeepXMSHandle - Subroutine
+
+Allows you to retain XMS memory after your program terminates.
+
+    DECLARE SUB KeepXMSHandle (BYVAL Handle%)
+    CALL KeepXMSHandle (Handle%)
+
+One important difference between the XMS memory manager and the EMS memory
+manager is the use of the B_OnExit routine.  B_OnExit is a hook into the
+QuickBASIC runtime that lets you tell BASIC to call a particular routine
+automatically when your program terminates.  This allows all of your XMS
+memory to be released back to the system when your program terminates.
+
+Using B_OnExit is very useful when working in the environment where you are
+apt to restart your program many times without first calling your normal
+termination routine.  However, there are times when you want some XMS memory
+you have allocated to remain after your program has terminated.
+KeepXMSHandle lets you pass data between programs without having to store it
+on disk.
+
+
+UMBAllocMem - Subroutine
+
+Allocates a specific number of bytes of upper memory.
+
+    DECLARE SUB UMBAllocMem (BYVAL NumBytes%, Segment%)
+    CALL UMBAllocMem (NumBytes%, HandleSegment%)
+
+Where NumBytes% is the number of bytes of upper memory requested, and
+Segment% is the segment of the block that was allocated.  You would then use
+BCopy or BCopyT to move data in and out of this block.  Upper memory is the
+memory located between 640K and 1024K on 80386/486 and some 80286 machines.
+
+
+UMBRelMem - Subroutine
+
+Releases all memory associated with a specified upper memory segment.
+
+    DECLARE SUB UMBRelMem (BYVAL Segment%)
+    CALL UMBRelMem (Segment%)

@@ -1,0 +1,429 @@
+HISTORY.DOC - This file documents all of the changes and improvements we have
+made to QuickPak Professional beginning with version 4.00.
+
+    ----------------------------------------------------------------------
+
+SEARCH.ASM (BASIC 7 only)   4-25-91
+Fixed a bug in the single precision compare routine that popped SI and DI
+in the wrong order.
+
+FINDEXCT.ASM (BASIC 7 only) 5-15-91
+Added Push ES/Pop ES (2 places) around STRINGLENGTH and STRINGADDRESS calls.
+
+FARSTR.ASM (BASIC 7 only)   5-17-91
+Removed unnecessary code, added code to prevent creating a zero-length
+string, and fixed some comment typos.
+
+FILECOPY.BAS                5-26-91
+Added code to prevent copying files on top of themselves.
+
+KEYDOWN.ASM                 5-27-91
+New routine reports if a key is currently being pressed.
+
+INCOUNT2.ASM (PDS only)     5-29-91
+Fixed a problem when the two string arguments were in different segments.
+
+PARSESTR.ASM                6-2-91
+New ParseString routine parses strings using a table of delimiters.
+
+DIALOG.BAS                  6/3/91
+Added the new assembler routine KeyDown to cause Dialog to wait until the
+terminating key that was pressed is released.  All of the demo programs
+(DEMODIAL.BAS, DEMODIA2.BAS, and DEMODIAP.BAS) have new comments about this.
+
+QINSTRH.ASM                 6-17-91
+New routine finds any string anywhere in memory.
+
+SPLITNAM.ASM                6-20-91
+New routine splits a file name into its component parts.
+
+LOADEXEC.ASM (and .BAS)     6-21-91
+New routine allows shelling to another program and getting its exit code.
+
+REPLCTBL.ASM                6-27-91
+New routines replaces characters using a translation table.
+
+SRCHPATH.BAS                6-27-91
+New function searchs all directories listed in PATH= for a file.
+
+AMENU.ASM (near and far strings)    6-28-91
+Fixed the bug caused when BASIC moves the array and AMenu is being used in
+the polling mode (ScanCode = 3).
+
+FILEVIEW.ASM (and FILEVIEW.BAS)     6-28-91
+New feature performs Tab expansion with user-specified number of spaces/Tab.
+
+Just prior to releasing version 4.00, a major reorganization was made to the
+assembly language source files.  In previous versions there was an enormous
+amount of duplication, because only minor changes to many original QuickBASIC
+files were needed to make them work with BASIC 7.  The only routines that
+needed major changes are those that accept or return strings.  In all other
+cases, the changes were simply to preserve the ES, SI, and DI registers if
+they were used.  In this version of QuickPak Professional only those routines
+that handle strings are kept separate, and the remaining routines will work
+with either QuickBASIC or BASIC 7 PDS.
+
+GETCMOS.BAS                 7-2-91
+New demo program shows how to read information in AT-compatible CMOS RAM.
+
+INTCTRL.ASM                 7-2-91
+New QPCli and QPSti routines to disable and reenable interrupts.
+
+NETDRIVE.ASM                7-10-91
+New routine tells if a given drive is remote (on a network).
+
+REMOVABL.ASM                7-10-91
+New routine tells if a given drive's media is removable (a floppy drive).
+
+    ^-------------------------------- 4.00 ------------------------------^
+
+SRCHPATH.BAS                7-18-91
+Ooops!  Changed the search order to .COM and then .EXE and then .BAT.
+
+MSGBOX.BAS                  7-29-91
+Deleted an unnecessary extra test for Message$ being null.
+
+REPLCTBL.ASM (QB and BC7)   7-29-91
+Added an extra Dec BP to account for the table being *pairs* of characters.
+
+PARSESTR.ASM (BASIC 7 only) 7-29-91
+Changed the incorrect procedure name from ParseStr to ParseString (oops).
+
+GETVMODE.ASM                8-5-91
+Removed unnecessary code that looks for a mono monitor and also causes the
+routine to not recognize an EGA/VGA mono properly.
+
+PARSESTR.ASM                8-6-91
+Remmed out the code that eats leading spaces and Tabs at Don's request.  Then
+added more remmed out code showing how to eat CHR$(0) bytes if needed.
+
+MASCIIPK.ASM and MCOLORPK.ASM   8-9-91
+Added a call to ShowCursor in the code block at Next_Row.  Consolidated the
+BASIC PDS version of MASCIIPK into the QB version since they're the same.
+
+FILEVIEW.ASM                8-12-91
+Fixed a bug where seeking to a loc in the file > 64K away didn't always work.
+
+REPLACET.ASM and REPLACT2.ASM   8-13-91
+TYPE variable versions of the ReplaceChar and ReplaceChar2 routines.
+
+DIALOG.BAS                  8-15-91
+Added Found = 0 to fix a bug that sometimes located the cursor incorrectly on
+an option button.
+
+    ^-------------------------------- 4.01 ------------------------------^
+
+FNSPREAD.BAS                8-19-91
+Fixed a bug in QPACOS when X# <> 1.  The formula in the manual was correct.
+
+MAX?.ASM and MIN?.ASM       9-5-91
+Fixed a bug in the Currency and floating Min/Max functions that crashed when
+only one element was given.
+
+GRAFCURS.BAS                9-28-91
+New example program shows how to define custom mouse cursor shapes.
+
+QPSOLVER.BAS                10-6-91
+Added "=" to the table of delimiters recognized in the Var2Value$ function,
+so expressions such as "X=100" can be watched.
+
+SPLITNAM.ASM                10-14-91
+Added code to detect a trailing backslash (no file name) and return a null
+string for FileName$ in that case.
+
+FNSPREAD.BAS                10-15-91
+QPROUND$ has been made nearly 7 times faster (when no coprocessor is present)
+using a simple improvement that is shown in the source code.
+
+SCANFILE.BAS                10-30-91
+Nash fixed an obscure bug that caused the program to sit in an endless loop
+if the string being searched for is all that is in the file.
+
+SCROLLIN.BAS                11-15-91
+Modified mouse code to correctly test for mouse clicks to the left and right
+of the text field when the mouse is clicked outside of the field.  Changed
+use of InstrTbl2 to QInstr2 because the table feature wasn't really needed.
+
+FINDT*.ASM                  11-23-91
+Added code upon entry to check for a segment boundary to trap a very obscure
+and occasional problem.  Similar code was added to all four routines.
+
+DOSERROR.ASM                11-27-91
+Fixed a bug where the wrong register was checked for the file's attribute.
+
+WINDOW.ASM and WINDOW.BAS   12-2-91
+Complete set of window management routines and example program.
+
+MIDCHAR.ASM and MIDCHARS.ASM    12-2-91
+New routines allow reading or assigning a single character very quickly.
+
+SHRTHERE.ASM                12-11-91
+New routine reports if SHARE is installed.
+
+PICKLIST.BAS                12/6/91
+Modified PICKLIST.BAS to return items in the Picked() array in the order
+selected as is described in the manual.  Previous versions returned selected
+items in sorted order.
+
+    ^-------------------------------- 4.02 ------------------------------^
+
+FARSTR.ASM                  1-4-92
+Reassembled the source code and rebuilt PRO7.LIB and PRO7.QLB.  A while back
+Jay tightened the code, but the new version had never been assembled.
+
+EXENAME.ASM (QB and PDS)    1-5-92
+Modified to use a local buffer for the output instead of the QPDTA to allow
+longer output names.
+
+R$GDT.ASM and R$FORMAT.ASM (and FORMAT.BAS demo)  1-7-91
+New routines to return the type of floppy drive and format a floppy drive.
+
+GETCPU.ASM                  1-10-92
+Added support for recognizing an 80486 processor.
+
+    ^-------------------------------- 4.03 ------------------------------^
+
+PULLDNMS.BAS                7-15-91
+Fixed the COMMAND$ code that caused "String formula to complex" error when
+BASIC used up all its temporary string discriptors after repeatedly running
+the program.  (This is a BASIC PDS bug we worked around, not our bug.)
+
+QEDITS.BAS                  9-12-91
+Fixed a problem where nothing could be entered on the last line of the array
+if it was full.  This behavior was correct when in insert mode, but not when
+overtyping.  Also moved some mouse handling code around to better accommodate
+Quick Screen.
+
+VERTMENU.BAS                1-8-92
+Made a change to allow typing letters to find drives in QD.BAS such as [-A-].
+
+MAKEQLB.BAS                 1-14-92
+Fixed problem where function references that included an equal sign but no
+spaces between caused MAKEQLB to ignore the reference.  ie: FuncName=SomeVar
+
+HAND2NAM.ASM/HAND2NAM.BAS   1-29-92
+New routine returns a file's name and extension given a DOS file handle.
+
+QEDIT7.BAS                  2-4-92
+Same as QEDIT*.BAS changes above, but also handles Ctrl-Ins keys (BASIC 7
+only).  Fixed some problems with the delete key behavior.
+
+QEDIT.BAS                   2-18-92
+Fixed some problems with word wrap where paragraphs were not formed upward
+properly.
+
+    ^-------------------------------- 4.10 ------------------------------^
+SRCHPATH.BAS                3-4-92
+Fixed the problem where ParseString$ was misnamed.
+
+VERTMENU.BAS                4-22-92
+Fixed a bug preventing a one-letter "hot key" from getting to the last item.
+
+MASKIN.BAS                  4-25-92
+Added support for foreign language characters.
+
+    ^-------------------------------- 4.11 ------------------------------^
+
+CODE2NUM.ASM                5-6-92
+Fixed the bug that failed when working with Currency data.  This fix affects
+all of the SortT and ISortT routines, and also KeySort.
+
+EVALUATE.BAS                5-9-92
+Fixed a bug that crashed when using ARCSIN with certain values.
+
+COMPCY.ASM                  5-10-92
+Complete rewrite for greatly improved efficiency.
+
+    ^-------------------------------- 4.12 ------------------------------^
+
+SCIFORM.BAS                 6-16-92
+New demo/routines program formats numbers in scientific notation.
+
+DEMOXMS.BAS                 6-21-92
+XMSInfoType was incorrect.
+
+XMSINFO.ASM                 6-21-92
+When no UMBs are available, DX doesn't contain a valid number. We check for
+an error code and if no UMBs are available, we now return zero.
+
+XMSMAIN.ASM                 6-21-92
+C$DeallocXMS now calls C$DelHandle to remove a deallocated XMS handle from
+our handle array.
+
+DECLARE.BAS                 6-21-92
+XMSAllocMem was incorrectly declared.  Added BYVAL for NumK% parameter.
+
+    ^-------------------------------- 4.13 ------------------------------^
+
+CLOCK.ASM and CLOCK24.ASM   7-30-92
+Changed the code to chain to the original Int 1Ch rather than return to the
+caller.  This lets these routines now work in the BASIC editors.
+
+Removed NEARSTR.ASM and NEARSTR.OBJ from the response files that build the
+product because they were never actually used or documented.
+
+Built and added PROVBD.QLB to allow QuickPak to work with Visual Basic for
+DOS (VB-DOS).
+
+Added README.VBD to explain the small differences needed to use QuickPak
+with VB-DOS.
+
+Modified some BASIC files to rename variables that are now reserved words in
+VB-DOS.  See README.VBD for details.
+
+KEYDOWN.ASM                 9-9-92
+Changed the code to use B_ONEXIT instead of _ONEXIT to support VB-DOS.  This
+change now makes this routine incompatible with QuickBASIC 4.0 (4.0 only).
+
+    ^-------------------------------- 4.14 ------------------------------^
+
+R$FORMAT.ASM                9-25-92
+Fixed the problem where any error was reported as "Track zero bad".
+
+CLOCK.ASM and CLOCK24.ASM   10-4-92
+Added code to periodically refresh the clock, to prevent it from losing time.
+
+Reorganized the way the entire product is set up on the distribution disks;
+created a new INSTALL program that support multiple destination directories.
+
+    ^-------------------------------- 4.15 ------------------------------^
+
+QPUSI.ASM                   10-15-92
+REMmed out the incoming variable in the Proc declaration to fix a bug.
+
+R$GDT.ASM                   10-26-92
+Allen Hillman added code to recognize 2.88MB drives.  Thanks to Allen!
+
+SPLITNAM.ASM                11-20-92
+Added code to handle an incoming null string for the full name being split.
+
+DEMOGAS.BAS and GASGAUGE.BAS    11-28-92
+New demo and subprogram, provides an attractive progress/status indicator.
+
+WINDOW.ASM                  12-18-92
+Added the QPWindowRow and QPWindowCol functions and the QPWindowPrintCR and
+QPWindowPrintWrap subroutines.  Added descriptions to the README manual in
+the section that describes the other QPWindow routines.
+
+WINDOW.BAS                  12-18-92
+Added code to show the new routines mentioned in WINDOW.ASM above.
+
+EDAT2NUM.ASM (far strings)  1-11-93 
+Added a call to delete the temporary string created.
+
+FILESORT.BAS                1-12-93
+Added explicit lower bounds to REDIM in the FileSort subprogram.
+
+MAKEQLB.BAS                 2-16-93
+Bob Simmons added support for VB/DOS programs.
+
+    ^-------------------------------- 4.16 ------------------------------^
+
+QINSTRH.ASM                 3-7-93
+Shuffled code around to fix an obscure bug that caused an infinite loop when
+the first byte of Search$ matched the last byte specified in NumBytes&.  A
+special thanks to Michael H. Shacter for finding this AND providing the fix.
+
+ASSEMBLY.ASM & ASSEMBLY.DOC 3-9-93
+Added code that fudges SS:SP to allow SS to be set to the same value as DS,
+which is assumed by many of the QuickPak routines (esp. DOS routines).  Then
+modified the DOC file to reflect that change.  Thanks to Michael Shacter for
+pointing out the need to do this.
+
+QPUSI.ASM                   3-9-93
+Fixed another dumb bug.  How can a 4-line routine cause so many problems?
+
+CLOCK24.ASM                 3-11-93
+Fixed a bug that failed to wrap the time at midnight.
+
+INSTALL.BAS                 3-21-93
+Added code to be sure PKUNZIP was actually copied before trying to delete it.
+
+The following assembly language routines have all been modified to eliminate
+a bug that happened when string compaction occurred during their operation:
+
+    QPLTRIM, QPRTRIM, QPTRIM, COMPACT, QPLEFT, QPMID, QPRIGHT, FLINPUT
+
+    ^-------------------------------- 4.17 ------------------------------^
+
+FSTAMP.ASM (far strings version only) 6-12-93
+Fixed a bug where DS was loaded from CS:OldDS, yet CS:OldDS had never been
+assigned.  CS:OldDS is now assigned at the very beginning of the routine.
+
+FEOF.ASM                    6-15-93
+Added the call to Restore_CEH that should have been there all along...
+
+PULLDOWN.BAS                6-29-93
+Fixed a bug that allowed selecting an inactive choice if it was the last one
+in the menu list.
+
+COMPACT.ASM (far strings only)      7-13-93
+Another compaction fix (see 4.17 above).  Thanks yet again to Myrna Traver
+Larson for not only reporting the problem but also submitting the fix code.
+
+QEDIT.BAS                           7-26-93
+Added a test in the Del key code to not reference the next higher line if
+that line is beyond the end of the array.
+
+QPLEFT.ASM, QPMID.ASM, QPRIGHT.ASM  7-31-93
+Fixed the bug added in 4.17 above that failed to test for illegal values when
+passing the arguments on to BASIC's LEFT$, MID$, and RIGHT$ routines.
+
+QPLEFT.ASM, QPMID.ASM, QPRIGHT.ASM, QPTRIM.ASM  8-19-93
+Added extra code (that shouldn't be necessary) to reassign the output to a
+static descriptor before returning.  This fixes a problem that happens in the
+QBX editor only.
+
+    ^-------------------------------- 4.18 ------------------------------^
+
+READFILI.ASM (near and far strings versions)    9-22-93
+Paul added code to not crash when a file larger than 99MB is encountered.
+
+COMPCY.ASM                          10-16-93
+Changed the code in two places from Jne Exit to Jne Done to fixe a subtle bug
+that affected signed comparisons.  Also made the same change to the internal
+Compare_CY routines in SortT, SortT2, ISortT, and ISortT2.
+
+QEDIT7.BAS                          7-26-93
+Same "delete handling" patch as for QEDIT.BAS in 4.18 above.
+
+KEYSORT.BAS                         12-3-93
+Changed the SPC(..) functions within the printing loop to instead be "  " to
+fix that long-standing, never-fixed SPC/TAB bug in QuickBASIC compiled code.
+
+TEXTSORT.BAS and DEMOTSRT.BAS       1-15-94
+New program and demo to sort plain ASCII text files.
+
+QEDITS.BAS                          1-20-94
+Various improvements as per Myrna Traver Larson.
+
+    ^-------------------------------- 4.19 ------------------------------^
+
+MRANGE.ASM and MRANGEG.ASM          2-27-94
+Added code to clear the incoming Button variable so the caller doesn't have
+to do that manually.  Also, merged in the "1" versions of those routines.
+
+READFILI.ASM (far strings version only) 3-29-94
+Rewritten nearly from scratch.  The old version required the caller to fill
+the array elements with spaces, which were then filled in pieces by ReadFilI
+with the file name, date, size, etc.  The problem was QPStrL was used to make
+a string version of the file size, which could cause the array elements to
+move while they were being assigned.  The rewrite builds the formatted string
+in a near-memory buffer, which is then assigned to the array elements.  This
+has the additional advantage of not requiring the elements to be pre-padded.
+
+PARSESTR.ASM (far strings version only) 11-4-94
+Myrna Larson fixed a problem the occurred when using ParseString with near
+strings (it always worked with far strings).
+
+NUM2DATE.ASM and DATE2NUM.ASM (near and far strings) 12-15-1995
+Fixed a bug where the year 1900 was wrongly considered a leap year.
+
+FILL1.ASM   12-22-1995
+New routine fills bytes of memory.
+
+DIALOG.BAS  12-23-95
+Added code to turn off the cursor before the call to MAMenu and then back on
+again, to eliminate the cursor which didn't follow the highlight bar.
+
+    ^-------------------------------- 4.20 ------------------------------^
